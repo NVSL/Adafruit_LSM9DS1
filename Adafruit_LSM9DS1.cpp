@@ -130,18 +130,79 @@ bool Adafruit_LSM9DS1::begin()
     return false;
 
   // enable gyro continuous
-  write8(XGTYPE, LSM9DS1_REGISTER_CTRL_REG1_G, 0xC0); // on XYZ
+
+
+#define HR_MODE             B10000000
+#define XL_LP_ODR_RATIO_50  B00000000
+#define XL_LP_ODR_RATIO_100 B00100000
+#define XL_LP_ODR_RATIO_9   B01000000
+#define XL_LP_ODR_RATIO_400 B01100000
+
+#define ODR_PD  B00000000
+#define ODR_10  B00100000
+#define ODR_50  B01000000
+#define ODR_119 B01100000
+#define ODR_238 B10000000
+#define ODR_476 B10100000
+#define ODR_952 B11000000
+
+
+#define G_OUTSEL_RAW    B00000000
+#define G_OUTSEL_HP     B00000001
+#define G_OUTSEL_HP_LP  B00000010
+
+#define G_HP_EN B01000000
+
+#define G_HP_CUT_0000   B00000000
+#define G_HP_CUT_0001   B00000001
+#define G_HP_CUT_0010   B00000010
+#define G_HP_CUT_0011   B00000011
+#define G_HP_CUT_0100   B00000100
+#define G_HP_CUT_0101   B00000101
+#define G_HP_CUT_0110   B00000110
+#define G_HP_CUT_0111   B00000111
+#define G_HP_CUT_1000   B00001000
+#define G_HP_CUT_1001   B00001001
+#define G_HP_CUT_1010   B00001010
+#define G_HP_CUT_1011   B00001011
+#define G_HP_CUT_1100   B00001100
+#define G_HP_CUT_1101   B00001101
+#define G_HP_CUT_1110   B00001110
+#define G_HP_CUT_1111   B00001111
+
+#define G_BW_G_00 B00000000
+#define G_BW_G_01 B00000001
+#define G_BW_G_10 B00000010
+#define G_BW_G_11 B00000011
+
 
   // Enable the accelerometer continous
   write8(XGTYPE, LSM9DS1_REGISTER_CTRL_REG5_XL, 0x38); // enable X Y and Z axis
-  write8(XGTYPE, LSM9DS1_REGISTER_CTRL_REG6_XL, 0xC0); // 1 KHz out data rate, BW set by ODR, 408Hz anti-aliasing
 
+  //write8(XGTYPE, LSM9DS1_REGISTER_CTRL_REG6_XL, ORD_952); // 1 KHz out data rate, BW set by ODR, 50Hz //408Hz anti-aliasing
+  //write8(XGTYPE, LSM9DS1_REGISTER_CTRL_REG6_XL, ORD_50); // 50 Hz out data rate, BW set by ODR, 50Hz //408Hz anti-aliasing
+
+  //write8(XGTYPE, LSM9DS1_REGISTER_CTRL_REG7_XL, 0xE0);  // High-percision mode, low pass cut off == ODR/400
+  //write8(XGTYPE, LSM9DS1_REGISTER_CTRL_REG7_XL, 0xC0);  // High-percision mode, low pass cut off == ODR/9
+  //write8(XGTYPE, LSM9DS1_REGISTER_CTRL_REG7_XL, 0x80);  // High-percision mode, low pass cut off == ODR/50
+
+  write8(XGTYPE, LSM9DS1_REGISTER_CTRL_REG1_G, ODR_238 | G_BW_G_10 );  //238hz ODR + 63Hz cuttof
+
+
+  //write8(XGTYPE, LSM9DS1_REGISTER_CTRL_REG6_XL,                   ODR_10); 
+  write8(XGTYPE, LSM9DS1_REGISTER_CTRL_REG7_XL, HR_MODE|XL_LP_ODR_RATIO_400);
 
   // enable mag continuous
+
   //write8(MAGTYPE, LSM9DS1_REGISTER_CTRL_REG1_M, 0xFC); // high perf XY, 80 Hz ODR
   write8(MAGTYPE, LSM9DS1_REGISTER_CTRL_REG3_M, 0x00); // continuous mode
+  //write8(MAGTYPE, LSM9DS1_REGISTER_CTRL_REG3_M, 0x00); // continuous mode
   //write8(MAGTYPE, LSM9DS1_REGISTER_CTRL_REG4_M, 0x0C); // high perf Z mode
+  
 
+  // Original values
+  //write8(XGTYPE, LSM9DS1_REGISTER_CTRL_REG6_XL, 0xC0); // 1 KHz out data rate, BW set by ODR, 408Hz anti-aliasing
+  // write8(XGTYPE, LSM9DS1_REGISTER_CTRL_REG1_G, 0xC0); // on XYZ
 
 
   // Set default ranges for the various sensors  
@@ -182,9 +243,14 @@ void Adafruit_LSM9DS1::readAccel() {
   xhi <<= 8; xhi |= xlo;
   yhi <<= 8; yhi |= ylo;
   zhi <<= 8; zhi |= zlo;
+
   accelData.x = xhi;
   accelData.y = yhi;
   accelData.z = zhi;
+
+  accelRaw.x = (int16_t)xhi;
+  accelRaw.y = (int16_t)yhi;
+  accelRaw.z = (int16_t)zhi;
 }
 
 void Adafruit_LSM9DS1::readMag() {
@@ -205,9 +271,14 @@ void Adafruit_LSM9DS1::readMag() {
   xhi <<= 8; xhi |= xlo;
   yhi <<= 8; yhi |= ylo;
   zhi <<= 8; zhi |= zlo;
+
   magData.x = xhi;
   magData.y = yhi;
   magData.z = zhi;
+
+  magRaw.x = (int16_t)xhi;
+  magRaw.y = (int16_t)yhi;
+  magRaw.z = (int16_t)zhi;
 }
 
 void Adafruit_LSM9DS1::readGyro() {
@@ -232,6 +303,11 @@ void Adafruit_LSM9DS1::readGyro() {
   gyroData.x = xhi;
   gyroData.y = yhi;
   gyroData.z = zhi;
+
+  gyroRaw.x = (int16_t)xhi;
+  gyroRaw.y = (int16_t)yhi;
+  gyroRaw.z = (int16_t)zhi;
+
 }
 
 void Adafruit_LSM9DS1::readTemp() {

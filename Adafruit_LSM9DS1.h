@@ -180,9 +180,20 @@ class Adafruit_LSM9DS1
       float z;
     } lsm9ds1Vector_t;
     
+    typedef struct vector_int
+    {
+      int16_t x;
+      int16_t y;
+      int16_t z;
+    } lsm9ds1IntVector_t;
+    
     lsm9ds1Vector_t accelData;    // Last read accelerometer data will be available here
     lsm9ds1Vector_t magData;      // Last read magnetometer data will be available here
     lsm9ds1Vector_t gyroData;     // Last read gyroscope data will be available here
+
+    lsm9ds1IntVector_t accelRaw;    // Last read accelerometer data will be available here
+    lsm9ds1IntVector_t magRaw;      // Last read magnetometer data will be available here
+    lsm9ds1IntVector_t gyroRaw;     // Last read gyroscope data will be available here
     int16_t         temperature;  // Last read temperzture data will be available here
     
     bool    begin       ( void );
