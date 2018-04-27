@@ -62,6 +62,58 @@ typedef void (Adafruit_LSM9DS1::*lsm9ds1_read_func)(void);
 typedef void (Adafruit_LSM9DS1::*lsm9ds1_get_event_func)(sensors_event_t*, uint32_t);
 typedef void (Adafruit_LSM9DS1::*lsm9ds1_get_sensor_func)(sensor_t*);
 
+#define HR_MODE             B10000000
+#define XL_LP_ODR_RATIO_50  B00000000
+#define XL_LP_ODR_RATIO_100 B00100000
+#define XL_LP_ODR_RATIO_9   B01000000
+#define XL_LP_ODR_RATIO_400 B01100000
+
+#define ODR_PD  B00000000
+#define ODR_10  B00100000
+#define ODR_50  B01000000
+#define ODR_119 B01100000
+#define ODR_238 B10000000
+#define ODR_476 B10100000
+#define ODR_952 B11000000
+
+#define G_OUTSEL_RAW    B00000000
+#define G_OUTSEL_HP     B00000001
+#define G_OUTSEL_HP_LP  B00000010
+
+#define G_HP_EN B01000000
+
+#define G_HP_CUT_0000   B00000000
+#define G_HP_CUT_0001   B00000001
+#define G_HP_CUT_0010   B00000010
+#define G_HP_CUT_0011   B00000011
+#define G_HP_CUT_0100   B00000100
+#define G_HP_CUT_0101   B00000101
+#define G_HP_CUT_0110   B00000110
+#define G_HP_CUT_0111   B00000111
+#define G_HP_CUT_1000   B00001000
+#define G_HP_CUT_1001   B00001001
+#define G_HP_CUT_1010   B00001010
+#define G_HP_CUT_1011   B00001011
+#define G_HP_CUT_1100   B00001100
+#define G_HP_CUT_1101   B00001101
+#define G_HP_CUT_1110   B00001110
+#define G_HP_CUT_1111   B00001111
+
+#define G_BW_G_00 B00000000
+#define G_BW_G_01 B00000001
+#define G_BW_G_10 B00000010
+#define G_BW_G_11 B00000011
+
+#define XL_NO_DECIMATE B00000000
+#define XL_DECIMATE_2  B01000000
+#define XL_DECIMATE_4  B10000000
+#define XL_DECIMATE_8  B11000000
+
+#define XL_ENABLE_Z B00100000
+#define XL_ENABLE_Y B00010000
+#define XL_ENABLE_X B00001000
+
+
 class Adafruit_LSM9DS1
 {
   public:
@@ -71,7 +123,7 @@ class Adafruit_LSM9DS1
     Adafruit_LSM9DS1 ( int8_t clk, int8_t miso, int8_t mosi, int8_t xmcs, int8_t gcs, int32_t sensorID = 0 );
     
     void initI2C( TwoWire* wireBus, int32_t sensorID );
-
+    
 
     typedef enum
     {

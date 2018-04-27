@@ -99,26 +99,15 @@ bool Adafruit_LSM9DS1::begin()
     digitalWrite(_clk, HIGH);
   }
 
-
-  // soft reset & reboot accel/gyro
-  write8(XGTYPE, LSM9DS1_REGISTER_CTRL_REG8, 0x05);
-  // soft reset & reboot magnetometer
-  write8(MAGTYPE, LSM9DS1_REGISTER_CTRL_REG2_M, 0x0C);
+  // Reboot!
+  // soft reset & reboot accel/gyro (Section 7.26) 
+  write8(XGTYPE, LSM9DS1_REGISTER_CTRL_REG8, B00000101);
+  // soft reset & reboot magnetometer (Section 8.6) 
+  write8(MAGTYPE, LSM9DS1_REGISTER_CTRL_REG2_M, B00001100);
 
   delay(10);
 
-
-  /*
-  for (uint8_t i=0; i<0x30; i++) {
-    Serial.print("XG $"); Serial.print(i, HEX); Serial.print(" = 0x"); 
-    Serial.println(read8(XGTYPE, i), HEX);
-  }
-  for (uint8_t i=0; i<0x30; i++) {
-    Serial.print("M $"); Serial.print(i, HEX); Serial.print(" = 0x"); 
-    Serial.println(read8(MAGTYPE, i), HEX);
-  }
-  */
-
+  // Sanity check.
   uint8_t id = read8(XGTYPE, LSM9DS1_REGISTER_WHO_AM_I_XG);
   //Serial.print ("XG whoami: 0x"); Serial.println(id, HEX);
   if (id != LSM9DS1_XG_ID)
@@ -129,86 +118,23 @@ bool Adafruit_LSM9DS1::begin()
   if (id != LSM9DS1_MAG_ID)
     return false;
 
-  // enable gyro continuous
+  // Enable the XL (Section 7.23)
+  write8(XGTYPE, LSM9DS1_REGISTER_CTRL_REG5_XL, XL_ENABLE_X | XL_ENABLE_Y | XL_ENABLE_Z);
 
+  // Set data rate for G and XL.  Set G low-pass cut off.  Set Gyro sensitivity (Section 7.12)
+  write8(XGTYPE, LSM9DS1_REGISTER_CTRL_REG1_G,  ODR_238 | G_BW_G_10 | LSM9DS1_GYROSCALE_245DPS);  //238hz ODR + 63Hz cuttof
 
-#define HR_MODE             B10000000
-#define XL_LP_ODR_RATIO_50  B00000000
-#define XL_LP_ODR_RATIO_100 B00100000
-#define XL_LP_ODR_RATIO_9   B01000000
-#define XL_LP_ODR_RATIO_400 B01100000
-
-#define ODR_PD  B00000000
-#define ODR_10  B00100000
-#define ODR_50  B01000000
-#define ODR_119 B01100000
-#define ODR_238 B10000000
-#define ODR_476 B10100000
-#define ODR_952 B11000000
-
-
-#define G_OUTSEL_RAW    B00000000
-#define G_OUTSEL_HP     B00000001
-#define G_OUTSEL_HP_LP  B00000010
-
-#define G_HP_EN B01000000
-
-#define G_HP_CUT_0000   B00000000
-#define G_HP_CUT_0001   B00000001
-#define G_HP_CUT_0010   B00000010
-#define G_HP_CUT_0011   B00000011
-#define G_HP_CUT_0100   B00000100
-#define G_HP_CUT_0101   B00000101
-#define G_HP_CUT_0110   B00000110
-#define G_HP_CUT_0111   B00000111
-#define G_HP_CUT_1000   B00001000
-#define G_HP_CUT_1001   B00001001
-#define G_HP_CUT_1010   B00001010
-#define G_HP_CUT_1011   B00001011
-#define G_HP_CUT_1100   B00001100
-#define G_HP_CUT_1101   B00001101
-#define G_HP_CUT_1110   B00001110
-#define G_HP_CUT_1111   B00001111
-
-#define G_BW_G_00 B00000000
-#define G_BW_G_01 B00000001
-#define G_BW_G_10 B00000010
-#define G_BW_G_11 B00000011
-
-
-  // Enable the accelerometer continous
-  write8(XGTYPE, LSM9DS1_REGISTER_CTRL_REG5_XL, 0x38); // enable X Y and Z axis
-
-  //write8(XGTYPE, LSM9DS1_REGISTER_CTRL_REG6_XL, ORD_952); // 1 KHz out data rate, BW set by ODR, 50Hz //408Hz anti-aliasing
-  //write8(XGTYPE, LSM9DS1_REGISTER_CTRL_REG6_XL, ORD_50); // 50 Hz out data rate, BW set by ODR, 50Hz //408Hz anti-aliasing
-
-  //write8(XGTYPE, LSM9DS1_REGISTER_CTRL_REG7_XL, 0xE0);  // High-percision mode, low pass cut off == ODR/400
-  //write8(XGTYPE, LSM9DS1_REGISTER_CTRL_REG7_XL, 0xC0);  // High-percision mode, low pass cut off == ODR/9
-  //write8(XGTYPE, LSM9DS1_REGISTER_CTRL_REG7_XL, 0x80);  // High-percision mode, low pass cut off == ODR/50
-
-  write8(XGTYPE, LSM9DS1_REGISTER_CTRL_REG1_G, ODR_238 | G_BW_G_10 );  //238hz ODR + 63Hz cuttof
-
-
-  //write8(XGTYPE, LSM9DS1_REGISTER_CTRL_REG6_XL,                   ODR_10); 
-  write8(XGTYPE, LSM9DS1_REGISTER_CTRL_REG7_XL, HR_MODE|XL_LP_ODR_RATIO_400);
-
-  // enable mag continuous
-
-  //write8(MAGTYPE, LSM9DS1_REGISTER_CTRL_REG1_M, 0xFC); // high perf XY, 80 Hz ODR
-  write8(MAGTYPE, LSM9DS1_REGISTER_CTRL_REG3_M, 0x00); // continuous mode
-  //write8(MAGTYPE, LSM9DS1_REGISTER_CTRL_REG3_M, 0x00); // continuous mode
-  //write8(MAGTYPE, LSM9DS1_REGISTER_CTRL_REG4_M, 0x0C); // high perf Z mode
+  // Set low-pass XL filter frequency divider (Section 7.25)
+  write8(XGTYPE, LSM9DS1_REGISTER_CTRL_REG7_XL, HR_MODE | XL_LP_ODR_RATIO_400);
   
+  // enable mag continuous (Section 8.7)
+  write8(MAGTYPE, LSM9DS1_REGISTER_CTRL_REG3_M, B00000000); // continuous mode
 
-  // Original values
-  //write8(XGTYPE, LSM9DS1_REGISTER_CTRL_REG6_XL, 0xC0); // 1 KHz out data rate, BW set by ODR, 408Hz anti-aliasing
-  // write8(XGTYPE, LSM9DS1_REGISTER_CTRL_REG1_G, 0xC0); // on XYZ
-
-
-  // Set default ranges for the various sensors  
+  // These function set the sensitivty of each sensor.  Checkout the implementations to see what they do.
   setupAccel(LSM9DS1_ACCELRANGE_2G);
   setupMag(LSM9DS1_MAGGAIN_4GAUSS);
   setupGyro(LSM9DS1_GYROSCALE_245DPS);
+
 
   return true;
 }
@@ -325,14 +251,15 @@ void Adafruit_LSM9DS1::readTemp() {
   temperature = xhi;
 }
 
-void Adafruit_LSM9DS1::setupAccel ( lsm9ds1AccelRange_t range )
+void Adafruit_LSM9DS1::setupAccel(lsm9ds1AccelRange_t range)
 {
   uint8_t reg = read8(XGTYPE, LSM9DS1_REGISTER_CTRL_REG6_XL);
   reg &= ~(0b00011000);
   reg |= range;
-  //Serial.println("set range: ");
+  // Update the registers
   write8(XGTYPE, LSM9DS1_REGISTER_CTRL_REG6_XL, reg );
-  
+
+  // Set things up so the outputs of the library are scaled correctly.
   switch (range)
   {
     case LSM9DS1_ACCELRANGE_2G:
@@ -350,13 +277,14 @@ void Adafruit_LSM9DS1::setupAccel ( lsm9ds1AccelRange_t range )
   }
 }
 
-void Adafruit_LSM9DS1::setupMag ( lsm9ds1MagGain_t gain )
+void Adafruit_LSM9DS1::setupMag(lsm9ds1MagGain_t gain)
 {
   uint8_t reg = read8(MAGTYPE, LSM9DS1_REGISTER_CTRL_REG2_M);
   reg &= ~(0b01100000);
   reg |= gain;
   write8(MAGTYPE, LSM9DS1_REGISTER_CTRL_REG2_M, reg );
 
+  // Set things up so the outputs of the library are scaled correctly.
   switch(gain)
   {
     case LSM9DS1_MAGGAIN_4GAUSS:
@@ -374,13 +302,14 @@ void Adafruit_LSM9DS1::setupMag ( lsm9ds1MagGain_t gain )
   }
 }
 
-void Adafruit_LSM9DS1::setupGyro ( lsm9ds1GyroScale_t scale )
+void Adafruit_LSM9DS1::setupGyro(lsm9ds1GyroScale_t scale)
 {
   uint8_t reg = read8(XGTYPE, LSM9DS1_REGISTER_CTRL_REG1_G);
   reg &= ~(0b00011000);
   reg |= scale;
   write8(XGTYPE, LSM9DS1_REGISTER_CTRL_REG1_G, reg );
 
+  // Set things up so the outputs of the library are scaled correctly.
   switch(scale)
   {
     case LSM9DS1_GYROSCALE_245DPS:
