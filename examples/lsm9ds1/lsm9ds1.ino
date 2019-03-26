@@ -37,7 +37,6 @@ void setupSensor()
   lsm.setupGyro(Adafruit_LSM9DS1::LSM9DS1_GYROSCALE_245DPS);
 }
 
-
 void setup() 
 {
   Serial.begin(115200);
@@ -47,7 +46,15 @@ void setup()
   }
   
   Serial.println("LSM9DS1 data read demo");
-  
+  pinMode(LED1, OUTPUT);
+  pinMode(LED2, OUTPUT);
+
+  for(int i = 0; i < 8; i++) {
+    digitalWrite(LED2, !digitalRead(LED2));
+    digitalWrite(LED1, !digitalRead(LED1));
+    delay(100);
+  }  
+
   // Try to initialise and warn if we couldn't detect the chip
   if (!lsm.begin())
   {
@@ -62,6 +69,7 @@ void setup()
 
 void loop() 
 {
+  digitalWrite(LED, !digitalRead(LED));
   lsm.read();  /* ask it to read in the data */ 
 
   /* Get a new sensor event */ 
