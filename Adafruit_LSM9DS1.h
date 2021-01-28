@@ -15,6 +15,7 @@
 #ifndef __LSM9DS1_H__
 #define __LSM9DS1_H__
 
+
 #if (ARDUINO >= 100)
  #include "Arduino.h"
 #else
@@ -79,6 +80,12 @@ typedef void (Adafruit_LSM9DS1::*lsm9ds1_get_sensor_func)(sensor_t*);
 #define G_OUTSEL_RAW    B00000000
 #define G_OUTSEL_HP     B00000001
 #define G_OUTSEL_HP_LP  B00000010
+
+#define BW_SCAL_ODR     B00000100
+#define BW_XL_408       B00000000
+#define BW_XL_211       B00000001
+#define BW_XL_105       B00000010
+#define BW_XL_50        B00000011
 
 #define G_HP_EN B01000000
 
@@ -295,7 +302,8 @@ class Adafruit_LSM9DS1
         /* Fill in sensor metadata. */
         (_parent->*_sensorFunc)(sensor);
       }
-
+	    ~Sensor() {}
+	    
     private:
       Adafruit_LSM9DS1* _parent;
       lsm9ds1_read_func _readFunc;

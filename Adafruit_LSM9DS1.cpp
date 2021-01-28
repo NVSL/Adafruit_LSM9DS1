@@ -14,6 +14,27 @@
  ***************************************************************************/
 #include <Adafruit_LSM9DS1.h>
 
+#ifdef __AVR__
+
+//#include "new"
+
+#if(1)
+#if __cpp_sized_deallocation
+void operator delete(void* ptr, unsigned int) {
+    delete ptr;
+}
+
+
+
+void operator delete[](void* ptr, unsigned int) {
+    delete[] ptr;
+}
+#endif
+#endif
+
+#endif
+
+
 /***************************************************************************
  CONSTRUCTOR
  ***************************************************************************/
@@ -348,6 +369,8 @@ bool Adafruit_LSM9DS1::getEvent(sensors_event_t *accelEvent,
   if (magEvent)   getMagEvent(magEvent, timestamp);
   if (gyroEvent)  getGyroEvent(gyroEvent, timestamp);
   if (tempEvent)  getTempEvent(tempEvent, timestamp);
+
+
   
   return true;
 }
